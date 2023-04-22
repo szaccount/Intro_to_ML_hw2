@@ -12,6 +12,17 @@ class Assignment2(object):
 
     Please use these function signatures for this assignment and submit this file, together with the intervals.py.
     """
+    # HELP FUNCTIONS MOVE
+    def prob_given_x(self, x):
+        """
+        Returns the probabilities for y = 1 given x, y = 0 given x (based on P) for the passed x.
+        """
+        if (0 <= x <= 0.2) or (0.4 <= x <= 0.6) or (0.8 <= x <= 1):
+            p = 0.8
+        else:
+            p = 0.1
+        return [p, 1-p]
+    # HELP FUNCTIONS MOVE
 
     def sample_from_D(self, m):
         """Sample m data samples from D.
@@ -20,8 +31,16 @@ class Assignment2(object):
         Returns: np.ndarray of shape (m,2) :
                 A two dimensional array of size m that contains the pairs where drawn from the distribution P.
         """
-        # TODO: Implement me
-        pass
+        left = 0
+        right = 1
+        x_sample = np.random.uniform(left,right,m)
+        x_sample.sort()
+        tags = [1,0]
+        y_sample = [np.random.choice(tags, p=self.prob_given_x(x)) for x in x_sample]
+        pairs = []
+        for i in range(len(x_sample)):
+            pairs.append([x_sample[i], y_sample[i]])
+        return np.array(pairs)
 
 
     def experiment_m_range_erm(self, m_first, m_last, step, k, T):
