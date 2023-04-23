@@ -97,6 +97,61 @@ class Assignment2(object):
         expect_real_0_hypo_1 = (0.2 * hypothesis_1_high_prob_area) + (0.9 * hypothesis_1_low_prob_area)
         return expect_real_1_hypo_0 + expect_real_0_hypo_1
 
+    def sample_x_from_D(self, m):
+        """Samples m samples of x from the distribution.
+        Input: m - an integer, the size of the data sample.
+
+        Returns: array of the sampled x values.
+        """
+        left = 0
+        right = 1
+        return np.random.uniform(left,right,m)
+    
+    def tags_of_sampled_x(self, x_samples):
+        """Samples the tags of the passed x samples.
+        Input: x_samples, the sampled x values.
+
+        Returns: array of tags sampled for the x samples. 
+        """
+        tags = [1,0]
+        return [np.random.choice(tags, p=self.prob_given_x(x)) for x in x_samples]
+    
+    def error_value_of_hypothesis_on_sample(self, intervals, x_value, y_value):
+        """Calculates the error value (0 or 1) of the hypothesis on the sample.
+        Input:
+        intervals - the hypothesis.
+        x_value - the x value of the sample.
+        y_value - the y value of the sample (real tag).
+
+        Returns: Error value (0 or 1) of the hypothesis on the sample (0 if hypothesis correct).
+        """
+        # Checking if the sample is in the intervals to have the classification of the hypothesis
+        contained = False
+        for interval in intervals:
+            if interval[0] <= x_value <= interval[1]:
+                contained = True
+                break
+        if (contained and y_value == 1) or (not contained and y_value == 0):
+            return 0
+        else:
+            return 1
+
+    def empirical_error_for_hypothesis(self, intervals, x_samples, y_samples):
+        """Calculates the empirical error for the passed hypothesis (intervals) on the passed samples.
+        Input:
+        intervals - the hypothesis.
+        x_samples - x values of the samples.
+        y_samples - y values of the samples.
+
+        Returns: Empirical error of the hypothesis on the samples.
+        """
+        num_errors = 0
+        num_samples = len(x_samples)
+        for i in range(num_samples):
+            num_errors += self.error_value_of_hypothesis_on_sample(intervals, x_samples[i], y_samples[i])
+        
+        return num_errors / num_samples
+
     # HELP FUNCTIONS MOVE
 
     def sample_from_D(self, m):
@@ -106,12 +161,9 @@ class Assignment2(object):
         Returns: np.ndarray of shape (m,2) :
                 A two dimensional array of size m that contains the pairs where drawn from the distribution P.
         """
-        left = 0
-        right = 1
-        x_sample = np.random.uniform(left,right,m)
+        x_sample = self.sample_x_from_D(m)
         x_sample.sort()
-        tags = [1,0]
-        y_sample = [np.random.choice(tags, p=self.prob_given_x(x)) for x in x_sample]
+        y_sample = self.tags_of_sampled_x(x_sample)
         pairs = []
         for i in range(len(x_sample)):
             pairs.append([x_sample[i], y_sample[i]])
@@ -209,15 +261,35 @@ class Assignment2(object):
 
         return k_star
 
+
     def cross_validation(self, m):
         """Finds a k that gives a good test error.
         Input: m - an integer, the size of the data sample.
 
         Returns: The best k value (an integer) found by the cross validation algorithm.
         """
-        samples = self.sample_from_D(m)
-        samples_x = [sample[0] for sample in samples]
-        samples_y = [sample[1] for sample in samples]
+        samples_x = self.sample_x_from_D(m)
+        separator = int(0.8 * m)
+        x_train = samples_x[:separator]
+        x_test = samples_x[separator:]
+        x_train.sort()
+        x_test.sort()
+        y_train = self.tags_of_sampled_x(x_train)
+        y_test = self.tags_of_sampled_x(x_test)
+
+        best_k = -1
+        best_empirical_error = 10
+        # It was said in the forum to only draw the samples once
+        for k in range(1,11):
+            erm_intervals, error_count_train = intervals.find_best_interval(x_train, y_train, k)
+            empirical_error_test = self.empirical_error_for_hypothesis(erm_intervals, x_test, y_test)
+            if empirical_error_test < best_empirical_error:
+                best_empirical_error = empirical_error_test
+                best_k = k
+        
+        print(f"{best_k=}, {best_empirical_error=}")
+        return best_k
+
         
 
     #################################
@@ -230,6 +302,6 @@ class Assignment2(object):
 if __name__ == '__main__':
     ass = Assignment2()
     # ass.experiment_m_range_erm(10, 100, 5, 3, 100)
-    ass.experiment_k_range_erm(1500, 1, 10, 1)
+    # ass.experiment_k_range_erm(1500, 1, 10, 1)
     ass.cross_validation(1500)
 
