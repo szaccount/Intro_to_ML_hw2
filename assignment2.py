@@ -279,15 +279,20 @@ class Assignment2(object):
 
         best_k = -1
         best_empirical_error = 10
+        best_intervals = []
         # It was said in the forum to only draw the samples once
         for k in range(1,11):
             erm_intervals, error_count_train = intervals.find_best_interval(x_train, y_train, k)
             empirical_error_test = self.empirical_error_for_hypothesis(erm_intervals, x_test, y_test)
+            print(f"For {k=} empirical error={empirical_error_test}")
             if empirical_error_test < best_empirical_error:
                 best_empirical_error = empirical_error_test
                 best_k = k
+                best_intervals = erm_intervals
         
         print(f"{best_k=}, {best_empirical_error=}")
+        print(f"Corresponding intervals: ")
+        print(f"{best_intervals}")
         return best_k
 
         
