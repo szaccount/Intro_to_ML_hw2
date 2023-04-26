@@ -12,147 +12,6 @@ class Assignment2(object):
 
     Please use these function signatures for this assignment and submit this file, together with the intervals.py.
     """
-    # HELP FUNCTIONS MOVE
-    def prob_given_x(self, x):
-        """
-        Returns the probabilities for y = 1 given x, y = 0 given x (based on P) for the passed x.
-        """
-        if (0 <= x <= 0.2) or (0.4 <= x <= 0.6) or (0.8 <= x <= 1):
-            p = 0.8
-        else:
-            p = 0.1
-        return [p, 1-p]
-    
-    def interval_lists_intersection(self, intervals1, intervals2):
-        """
-        Input: two lists of intervals.
-
-        Returns: the intervals of the intersection between the two lists.
-        """
-        intersection = []
-        index1 = 0
-        index2 = 0
-
-        while index1 < len(intervals1) and index2 < len(intervals2):
-            # Checking if intervals1[index1] intersects intervals2[index2]
-            start = max(intervals1[index1][0], intervals2[index2][0])
-            end = min(intervals1[index1][1], intervals2[index2][1])
-            if start <= end:
-                intersection.append([start, end])
-
-            # Skip the interval with the lowest endpoint
-            if intervals1[index1][1] < intervals2[index2][1]:
-                index1 += 1
-            else:
-                index2 += 1
-
-        return intersection
-
-    # DELETE THIS
-    def calculate_len_intersection(self, list1, list2):
-        """Calculate the length of the intersection between the intervals in list1 and list2.
-        Input: list1 - a list of tuples, every tuple is an interval.
-            list2 - a list of tuples, every tuple is an interval.
-
-        Returns: The length of the intersection between the intervals in list1 and list2.
-        """
-        len_intersection = 0
-        pointer_list1 = 0
-        pointer_list2 = 0
-        while pointer_list1 < len(list1) and pointer_list2 < len(list2):
-            start = max(list1[pointer_list1][0], list2[pointer_list2][0])
-            end = min(list1[pointer_list1][1], list2[pointer_list2][1])
-            if start < end:
-                len_intersection += (end - start)
-            if list1[pointer_list1][1] == list2[pointer_list2][1]:
-                pointer_list1 += 1
-                pointer_list2 += 1
-            elif list1[pointer_list1][1] < list2[pointer_list2][1]:
-                pointer_list1 += 1
-            else:
-                pointer_list2 += 1
-        return len_intersection
-    # DELETE THIS
-
-    def true_error_for_intervals(self, intervals):
-        """
-        Returns the true error with resepect to the distribution P and the passed intervals (define hypothesis).
-        """
-        # accumulates area where passed intervals are in [0,0.2]U[0.4,0.6]U[0.8,1]
-        hypothesis_1_high_prob_area = 0
-        # accumulates area where passed intervals are in [0.2,0.4]U[0.6,0.8]
-        hypothesis_1_low_prob_area = 0
-        intersection_1_high_prob = self.interval_lists_intersection([[0,0.2], [0.4,0.6], [0.8,1]], intervals)
-        intersection_1_low_prob = self.interval_lists_intersection([[0.2,0.4], [0.6,0.8]], intervals)
-        for interval in intersection_1_high_prob:
-            hypothesis_1_high_prob_area += (interval[1] - interval[0])
-        for interval in intersection_1_low_prob:
-            hypothesis_1_low_prob_area += (interval[1] - interval[0])
-        
-        hypothesis_0_high_prob_area = 0.4 - hypothesis_1_low_prob_area
-        hypothesis_0_low_prob_area = 0.6 - hypothesis_1_high_prob_area
-
-        # real gives 1 while hypothesis 0
-        expect_real_1_hypo_0 = (0.8 * hypothesis_0_low_prob_area) + (0.1 * hypothesis_0_high_prob_area)
-        expect_real_0_hypo_1 = (0.2 * hypothesis_1_high_prob_area) + (0.9 * hypothesis_1_low_prob_area)
-        return expect_real_1_hypo_0 + expect_real_0_hypo_1
-
-    def sample_x_from_D(self, m):
-        """Samples m samples of x from the distribution.
-        Input: m - an integer, the size of the data sample.
-
-        Returns: array of the sampled x values.
-        """
-        left = 0
-        right = 1
-        return np.random.uniform(left,right,m)
-    
-    def tags_of_sampled_x(self, x_samples):
-        """Samples the tags of the passed x samples.
-        Input: x_samples, the sampled x values.
-
-        Returns: array of tags sampled for the x samples. 
-        """
-        tags = [1,0]
-        return [np.random.choice(tags, p=self.prob_given_x(x)) for x in x_samples]
-    
-    def error_value_of_hypothesis_on_sample(self, intervals, x_value, y_value):
-        """Calculates the error value (0 or 1) of the hypothesis on the sample.
-        Input:
-        intervals - the hypothesis.
-        x_value - the x value of the sample.
-        y_value - the y value of the sample (real tag).
-
-        Returns: Error value (0 or 1) of the hypothesis on the sample (0 if hypothesis correct).
-        """
-        # Checking if the sample is in the intervals to have the classification of the hypothesis
-        contained = False
-        for interval in intervals:
-            if interval[0] <= x_value <= interval[1]:
-                contained = True
-                break
-        if (contained and y_value == 1) or (not contained and y_value == 0):
-            return 0
-        else:
-            return 1
-
-    def empirical_error_for_hypothesis(self, intervals, x_samples, y_samples):
-        """Calculates the empirical error for the passed hypothesis (intervals) on the passed samples.
-        Input:
-        intervals - the hypothesis.
-        x_samples - x values of the samples.
-        y_samples - y values of the samples.
-
-        Returns: Empirical error of the hypothesis on the samples.
-        """
-        num_errors = 0
-        num_samples = len(x_samples)
-        for i in range(num_samples):
-            num_errors += self.error_value_of_hypothesis_on_sample(intervals, x_samples[i], y_samples[i])
-        
-        return num_errors / num_samples
-
-    # HELP FUNCTIONS MOVE
 
     def sample_from_D(self, m):
         """Sample m data samples from D.
@@ -284,15 +143,15 @@ class Assignment2(object):
         for k in range(1,11):
             erm_intervals, error_count_train = intervals.find_best_interval(x_train, y_train, k)
             empirical_error_test = self.empirical_error_for_hypothesis(erm_intervals, x_test, y_test)
-            print(f"For {k=} empirical error={empirical_error_test}")
+            # print(f"For {k=} empirical error={empirical_error_test}")
             if empirical_error_test < best_empirical_error:
                 best_empirical_error = empirical_error_test
                 best_k = k
                 best_intervals = erm_intervals
         
-        print(f"{best_k=}, {best_empirical_error=}")
-        print(f"Corresponding intervals: ")
-        print(f"{best_intervals}")
+        # print(f"{best_k=}, {best_empirical_error=}")
+        # print(f"Corresponding intervals: ")
+        # print(f"{best_intervals}")
         return best_k
 
         
@@ -300,13 +159,126 @@ class Assignment2(object):
     #################################
     # Place for additional methods
 
+    def prob_given_x(self, x):
+        """
+        Returns the probabilities for y = 1 given x, y = 0 given x (based on P) for the passed x.
+        """
+        if (0 <= x <= 0.2) or (0.4 <= x <= 0.6) or (0.8 <= x <= 1):
+            p = 0.8
+        else:
+            p = 0.1
+        return [p, 1-p]
+    
+    def interval_lists_intersection(self, intervals1, intervals2):
+        """
+        Input: two lists of intervals.
+
+        Returns: the intervals of the intersection between the two lists.
+        """
+        intersection = []
+        index1 = 0
+        index2 = 0
+
+        while index1 < len(intervals1) and index2 < len(intervals2):
+            # Checking if intervals1[index1] intersects intervals2[index2]
+            start = max(intervals1[index1][0], intervals2[index2][0])
+            end = min(intervals1[index1][1], intervals2[index2][1])
+            if start <= end:
+                intersection.append([start, end])
+
+            # Skip the interval with the lowest endpoint
+            if intervals1[index1][1] < intervals2[index2][1]:
+                index1 += 1
+            else:
+                index2 += 1
+
+        return intersection
+
+    def true_error_for_intervals(self, intervals):
+        """
+        Returns the true error with resepect to the distribution P and the passed intervals (defines hypothesis).
+        """
+        # accumulates area where passed intervals are in [0,0.2]U[0.4,0.6]U[0.8,1]
+        hypothesis_1_high_prob_area = 0
+        # accumulates area where passed intervals are in [0.2,0.4]U[0.6,0.8]
+        hypothesis_1_low_prob_area = 0
+        intersection_1_high_prob = self.interval_lists_intersection([[0,0.2], [0.4,0.6], [0.8,1]], intervals)
+        intersection_1_low_prob = self.interval_lists_intersection([[0.2,0.4], [0.6,0.8]], intervals)
+        for interval in intersection_1_high_prob:
+            hypothesis_1_high_prob_area += (interval[1] - interval[0])
+        for interval in intersection_1_low_prob:
+            hypothesis_1_low_prob_area += (interval[1] - interval[0])
+        
+        hypothesis_0_high_prob_area = 0.4 - hypothesis_1_low_prob_area
+        hypothesis_0_low_prob_area = 0.6 - hypothesis_1_high_prob_area
+
+        # real gives 1 while hypothesis 0
+        expect_real_1_hypo_0 = (0.8 * hypothesis_0_low_prob_area) + (0.1 * hypothesis_0_high_prob_area)
+        # real gives 0 while hypothesis 1
+        expect_real_0_hypo_1 = (0.2 * hypothesis_1_high_prob_area) + (0.9 * hypothesis_1_low_prob_area)
+        return expect_real_1_hypo_0 + expect_real_0_hypo_1
+
+    def sample_x_from_D(self, m):
+        """Samples m samples of x from the distribution.
+        Input: m - an integer, the size of the data sample.
+
+        Returns: array of the sampled x values.
+        """
+        left = 0
+        right = 1
+        return np.random.uniform(left,right,m)
+    
+    def tags_of_sampled_x(self, x_samples):
+        """Samples the tags of the passed x samples.
+        Input: x_samples, the sampled x values.
+
+        Returns: array of tags sampled for the x samples. 
+        """
+        tags = [1,0]
+        return [np.random.choice(tags, p=self.prob_given_x(x)) for x in x_samples]
+    
+    def error_value_of_hypothesis_on_sample(self, intervals, x_value, y_value):
+        """Calculates the error value (0 or 1) of the hypothesis on the sample.
+        Input:
+        intervals - the hypothesis.
+        x_value - the x value of the sample.
+        y_value - the y value of the sample (real tag).
+
+        Returns: Error value (0 or 1) of the hypothesis on the sample (0 if hypothesis correct).
+        """
+        # Checking if the sample is in the intervals to have the classification of the hypothesis
+        contained = False
+        for interval in intervals:
+            if interval[0] <= x_value <= interval[1]:
+                contained = True
+                break
+        if (contained and y_value == 1) or (not contained and y_value == 0):
+            return 0
+        else:
+            return 1
+
+    def empirical_error_for_hypothesis(self, intervals, x_samples, y_samples):
+        """Calculates the empirical error for the passed hypothesis (intervals) on the passed samples.
+        Input:
+        intervals - the hypothesis.
+        x_samples - x values of the samples.
+        y_samples - y values of the samples.
+
+        Returns: Empirical error of the hypothesis on the samples.
+        """
+        num_errors = 0
+        num_samples = len(x_samples)
+        for i in range(num_samples):
+            num_errors += self.error_value_of_hypothesis_on_sample(intervals, x_samples[i], y_samples[i])
+        
+        return num_errors / num_samples
 
     #################################
 
 
 if __name__ == '__main__':
     ass = Assignment2()
-    # ass.experiment_m_range_erm(10, 100, 5, 3, 100)
-    # ass.experiment_k_range_erm(1500, 1, 10, 1)
+    ass.experiment_m_range_erm(10, 100, 5, 3, 100)
+    ass.experiment_k_range_erm(1500, 1, 10, 1)
     ass.cross_validation(1500)
 
